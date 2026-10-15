@@ -1,0 +1,6 @@
+{
+  "name": "Small Finance",
+  "description": "Real-time Customer Management Application for Small Finance businesses powered by Firebase Cloud Firestore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

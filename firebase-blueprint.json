@@ -1,0 +1,131 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account details and business identification.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "businessName": { "type": "string", "maxLength": 100 },
+        "mobileNumber": { "type": "string", "maxLength": 20 },
+        "email": { "type": "string", "format": "email", "maxLength": 100 },
+        "profileImageUrl": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "businessName", "email"]
+    },
+    "Customer": {
+      "title": "Customer Record",
+      "description": "Customer financial and contact details.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "mobileNumber": { "type": "string", "maxLength": 20 },
+        "email": { "type": "string", "maxLength": 100 },
+        "address": { "type": "string", "maxLength": 200 },
+        "profileImageUrl": { "type": "string", "maxLength": 1000 },
+        "referenceName": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "description": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending", "successful"] },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "ownerUid", "customerName", "amount", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification messages.",
+      "type": "object",
+      "properties": {
+        "notificationId": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "title": { "type": "string", "maxLength": 100 },
+        "message": { "type": "string", "maxLength": 500 },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["notificationId", "ownerUid", "title", "message", "isRead"]
+    },
+    "CustomerHistory": {
+      "title": "Customer History Audit",
+      "description": "Audit trail for customer changes.",
+      "type": "object",
+      "properties": {
+        "historyId": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "customerId": { "type": "string" },
+        "action": { "type": "string" },
+        "previousStatus": { "type": "string" },
+        "newStatus": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["historyId", "ownerUid", "customerId", "action"]
+    },
+    "BusinessSettings": {
+      "title": "Business Settings",
+      "description": "Settings for the business account.",
+      "type": "object",
+      "properties": {
+        "ownerUid": { "type": "string" },
+        "businessName": { "type": "string" },
+        "businessAddress": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "email": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerUid", "businessName"]
+    },
+    "CustomerTransaction": {
+      "title": "Customer Transaction",
+      "description": "Financial transaction ledger entry.",
+      "type": "object",
+      "properties": {
+        "transactionId": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "customerId": { "type": "string" },
+        "amount": { "type": "number" },
+        "transactionType": { "type": "string" },
+        "description": { "type": "string" },
+        "transactionDate": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["transactionId", "ownerUid", "customerId", "amount", "transactionType"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles indexed by UID"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customers scoped by ownerUid"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Notifications scoped by ownerUid"
+    },
+    "/customerHistory/{historyId}": {
+      "schema": "CustomerHistory",
+      "description": "Customer audit logs scoped by ownerUid"
+    },
+    "/businessSettings/{uid}": {
+      "schema": "BusinessSettings",
+      "description": "Business settings indexed by owner UID"
+    },
+    "/customerTransactions/{transactionId}": {
+      "schema": "CustomerTransaction",
+      "description": "Transactions scoped by ownerUid and customerId"
+    }
+  }
+}
