@@ -355,17 +355,12 @@ export const Transactions: React.FC = () => {
 
     try {
       setDownloadingJpg(true);
-
-      // Render high-resolution 2D Canvas directly from customer & transaction state (100% reliable, zero CSS oklch bugs)
-      const invoiceCanvas = generateInvoiceCanvasFallback(customer, filteredTransactions, totalPayments);
-
       const fileName = `Invoice_${customer.customerId || 'Statement'}_${new Date().toISOString().split('T')[0]}.jpg`;
 
-      const saveBlobOrDataUrl = (url: string) => {
+      const triggerDownload = (dataUrl: string) => {
         const link = document.createElement('a');
-        link.href = url;
+        link.href = dataUrl;
         link.download = fileName;
-        link.setAttribute('type', 'image/jpeg');
         document.body.appendChild(link);
         link.click();
         setTimeout(() => {
@@ -375,32 +370,62 @@ export const Transactions: React.FC = () => {
         }, 1000);
       };
 
-      if (invoiceCanvas.toBlob) {
-        invoiceCanvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const objectUrl = URL.createObjectURL(blob);
-              saveBlobOrDataUrl(objectUrl);
-              setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
-            } else {
-              saveBlobOrDataUrl(invoiceCanvas.toDataURL('image/jpeg', 0.95));
-            }
-            setToastMessage('Invoice JPG image downloaded successfully!');
-            setTimeout(() => setToastMessage(''), 3000);
-            setDownloadingJpg(false);
-          },
-          'image/jpeg',
-          0.95
-        );
-      } else {
-        saveBlobOrDataUrl(invoiceCanvas.toDataURL('image/jpeg', 0.95));
-        setToastMessage('Invoice JPG image downloaded successfully!');
-        setTimeout(() => setToastMessage(''), 3000);
-        setDownloadingJpg(false);
+      const element = document.getElementById('printable-invoice');
+      let canvasToUse: HTMLCanvasElement | null = null;
+
+      if (element) {
+        try {
+          // Dynamic import html2canvas to capture DOM node directly
+          const html2canvasModule = await import('html2canvas');
+          const html2canvas = html2canvasModule.default;
+
+          canvasToUse = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            onclone: (clonedDoc) => {
+              // Strip oklch from cloned style tags to prevent html2canvas color parse error
+              const styleTags = Array.from(clonedDoc.querySelectorAll('style'));
+              styleTags.forEach((tag) => {
+                if (tag.textContent) {
+                  tag.textContent = tag.textContent.replace(/oklch\([^)]+\)/g, '#0f172a');
+                }
+              });
+              const clonedElement = clonedDoc.getElementById('printable-invoice');
+              if (clonedElement) {
+                clonedElement.style.display = 'block';
+                clonedElement.style.visibility = 'visible';
+                clonedElement.style.position = 'static';
+                clonedElement.style.width = '800px';
+                clonedElement.style.padding = '24px';
+                clonedElement.style.backgroundColor = '#ffffff';
+                clonedElement.style.color = '#0f172a';
+              }
+            },
+          });
+        } catch (h2cErr) {
+          console.warn('html2canvas capture warning, using 2D Canvas fallback:', h2cErr);
+          canvasToUse = null;
+        }
       }
+
+      if (!canvasToUse) {
+        // High-resolution 2D Canvas Fallback Generator
+        canvasToUse = generateInvoiceCanvasFallback(customer, filteredTransactions, totalPayments);
+      }
+
+      // Convert canvas to Data URL for 100% reliable download across webviews, iOS, Android, and GitHub Pages
+      const dataUrl = canvasToUse.toDataURL('image/jpeg', 0.95);
+      triggerDownload(dataUrl);
+
+      setToastMessage('Invoice JPG image downloaded successfully!');
+      setTimeout(() => setToastMessage(''), 3000);
     } catch (err: any) {
       console.error('Failed to generate invoice image:', err);
       alert('Could not download invoice image: ' + (err?.message || 'Unknown error'));
+    } finally {
       setDownloadingJpg(false);
     }
   };
