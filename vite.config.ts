@@ -4,8 +4,10 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(({ command, mode }) => {
-  const isBuild = command === 'build' || mode === 'production' || process.env.NODE_ENV === 'production';
-  const basePath = process.env.VITE_BASE_PATH || (isBuild ? '/Loan/' : './');
+  const isDev = command === 'serve';
+  const isBuild = command === 'build' || mode === 'production';
+  // Use VITE_BASE_PATH if provided, else relative './' for universal compatibility
+  const basePath = isDev ? '/' : (process.env.VITE_BASE_PATH || './');
 
   return {
     base: basePath,
