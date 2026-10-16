@@ -5,11 +5,28 @@ import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { OperationType, FirestoreErrorInfo } from '../types';
 
-// Initialize Firebase App
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase App safely
+const app = (() => {
+  try {
+    return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  } catch (err) {
+    console.error('[Firebase Init Warning]:', err);
+    return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  }
+})();
 
-// Initialize Cloud Firestore with explicit Database ID as required by skill
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+// Initialize Cloud Firestore with explicit Database ID
+export const db = (() => {
+  try {
+    if (firebaseConfig.firestoreDatabaseId) {
+      return getFirestore(app, firebaseConfig.firestoreDatabaseId);
+    }
+    return getFirestore(app);
+  } catch (err) {
+    console.warn('[Firestore Init Fallback]:', err);
+    return getFirestore(app);
+  }
+})();
 
 // Initialize Firebase Auth
 export const auth = getAuth(app);

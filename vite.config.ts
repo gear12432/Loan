@@ -3,9 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ command, mode }) => {
+  const isBuild = command === 'build' || mode === 'production' || process.env.NODE_ENV === 'production';
+  const basePath = process.env.VITE_BASE_PATH || (isBuild ? '/Loan/' : './');
+
   return {
-    base: process.env.VITE_BASE_PATH || (process.env.NODE_ENV === 'production' ? '/Loan/' : './'),
+    base: basePath,
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
